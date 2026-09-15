@@ -1,0 +1,143 @@
+/**
+ * Bob Wafer Yield Root Cause & Defect Pattern Analyser
+ * Cleanroom HUD Styling & Visual Design System
+ */
+
+:root {
+  --bg-primary: #070a12;
+  --bg-secondary: #0c1220;
+  --bg-card: #111a2e;
+  --border-dim: #1e293b;
+  --border-bright: #38bdf8;
+  --accent-cyan: #00f0ff;
+  --accent-amber: #f59e0b;
+  --accent-rose: #f43f5e;
+  --accent-emerald: #10b981;
+}
+
+body {
+  background-color: var(--bg-primary);
+  color: #f1f5f9;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  overflow-x: hidden;
+}
+
+/* Monospace fonts for coordinates, lots, sensor units */
+.font-mono {
+  font-family: 'JetBrains Mono', 'Fira Code', Menlo, Monaco, Consolas, monospace;
+}
+
+/* Custom Cleanroom Glows */
+.hud-border-cyan {
+  border-color: rgba(0, 240, 255, 0.35);
+  box-shadow: 0 0 15px rgba(0, 240, 255, 0.08);
+}
+
+.hud-border-rose {
+  border-color: rgba(244, 63, 94, 0.4);
+  box-shadow: 0 0 15px rgba(244, 63, 94, 0.12);
+}
+
+.hud-glow-text {
+  text-shadow: 0 0 10px rgba(0, 240, 255, 0.5);
+}
+
+/* Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #090d16;
+}
+::-webkit-scrollbar-thumb {
+  background: #1e293b;
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #334155;
+}
+
+/* Silicon Grid Canvas Wrapper */
+.wafer-canvas-wrapper {
+  position: relative;
+  background: radial-gradient(circle at center, #10192e 0%, #080d19 75%, #050811 100%);
+  border: 1px solid #1e2a44;
+  border-radius: 1rem;
+  box-shadow: inset 0 0 40px rgba(0, 0, 0, 0.6), 0 10px 30px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+  user-select: none;
+}
+
+/* Wafer Tooltip */
+.die-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: rgba(11, 18, 33, 0.95);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7), 0 0 12px rgba(56, 189, 248, 0.2);
+  border-radius: 8px;
+  padding: 8px 12px;
+  font-size: 11px;
+  color: #e2e8f0;
+  z-index: 50;
+  transition: opacity 0.1s ease;
+  backdrop-filter: blur(8px);
+}
+
+/* Cleanroom Pulsing Indicator */
+@keyframes fab-pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.4;
+    transform: scale(1.08);
+  }
+}
+
+.pulse-critical {
+  animation: fab-pulse 1.6s infinite ease-in-out;
+}
+
+/* Shimmer scanline effect on critical banners */
+.scanline {
+  position: relative;
+  overflow: hidden;
+}
+.scanline::after {
+  content: " ";
+  display: block;
+  position: absolute;
+  top: 0; left: 0; bottom: 0; right: 0;
+  background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.04), rgba(0, 255, 255, 0.02), rgba(0, 0, 255, 0.04));
+  z-index: 2;
+  background-size: 100% 3px, 6px 100%;
+  pointer-events: none;
+}
+
+/* Interactive Tabs */
+.tab-btn {
+  position: relative;
+  transition: all 0.2s ease;
+}
+.tab-btn.active {
+  color: #38bdf8;
+  border-bottom: 2px solid #38bdf8;
+  background: rgba(56, 189, 248, 0.08);
+}
+
+/* Modal Backdrop */
+.modal-overlay {
+  background: rgba(3, 7, 18, 0.85);
+  backdrop-filter: blur(8px);
+}
+
+/* Micro-badge pill */
+.chip {
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 4px;
+}

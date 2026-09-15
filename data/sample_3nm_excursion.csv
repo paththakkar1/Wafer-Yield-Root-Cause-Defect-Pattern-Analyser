@@ -1,0 +1,21 @@
+die_id,grid_x,grid_y,phys_x_mm,phys_y_mm,bin,bin_name,vth_v,leakage_na,defect_class
+1,-28,0,-145.6,0.0,7,Edge Leakage,0.182,18.4,Edge-Ring
+2,-27,5,-140.4,26.0,7,Edge Leakage,0.194,16.2,Edge-Ring
+3,-26,-8,-135.2,-41.6,9,Gate Short,0.082,42.8,Edge-Ring
+4,-25,12,-130.0,62.4,7,Edge Leakage,0.201,14.5,Edge-Ring
+5,-24,-14,-124.8,-72.8,1,Pass,0.321,0.06,Normal
+6,-20,18,-104.0,93.6,1,Pass,0.318,0.05,Normal
+7,-15,22,-78.0,114.4,1,Pass,0.325,0.08,Normal
+8,-10,-24,-52.0,-124.8,1,Pass,0.319,0.04,Normal
+9,-5,26,-26.0,135.2,7,Edge Leakage,0.178,21.0,Edge-Ring
+10,0,27,0.0,140.4,9,Gate Short,0.054,58.2,Edge-Ring
+11,5,26,26.0,135.2,7,Edge Leakage,0.188,19.4,Edge-Ring
+12,10,-24,52.0,-124.8,1,Pass,0.324,0.07,Normal
+13,15,22,78.0,114.4,1,Pass,0.315,0.05,Normal
+14,20,-18,104.0,-93.6,1,Pass,0.322,0.06,Normal
+15,24,14,124.8,72.8,7,Edge Leakage,0.192,15.8,Edge-Ring
+16,25,-12,130.0,-62.4,7,Edge Leakage,0.185,17.1,Edge-Ring
+17,26,8,135.2,41.6,9,Gate Short,0.072,46.3,Edge-Ring
+18,27,-5,140.4,-26.0,7,Edge Leakage,0.198,16.7,Edge-Ring
+19,28,0,145.6,0.0,9,Gate Short,0.065,52.1,Edge-Ring
+20,0,0,0.0,0.0,1,Pass,0.320,0.05,Normal

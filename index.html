@@ -1,0 +1,526 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bob YieldAI • Wafer Yield Root Cause & Defect Pattern Analyser</title>
+  
+  <!-- Tailwind CSS via CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            slate: {
+              850: '#131b2e',
+              950: '#060a12'
+            },
+            cyan: {
+              450: '#00f0ff',
+              550: '#00d2df'
+            }
+          }
+        }
+      }
+    }
+  </script>
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+  <!-- Chart.js for Sensor Telemetry Graphs -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+
+  <!-- Custom Cleanroom Styles -->
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-cyan-500 selection:text-slate-950">
+
+  <!-- TOP EXECUTIVE NAVIGATION & FAB STATUS -->
+  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-40">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3 flex flex-wrap items-center justify-between gap-4">
+      
+      <!-- Brand & Hackathon Tag -->
+      <div class="flex items-center gap-3.5">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 to-blue-600 flex items-center justify-center shadow-lg shadow-cyan-950/50 ring-1 ring-cyan-400/40">
+          <svg class="w-6 h-6 text-slate-950" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <circle cx="12" cy="12" r="9" stroke-width="2.2"/>
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M12 3v18M3 12h18M7.5 7.5l9 9M16.5 7.5l-9 9"/>
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="text-base font-extrabold tracking-tight text-white flex items-center gap-1.5">
+              Bob <span class="text-cyan-400">YieldAI</span>
+            </span>
+            <span class="text-[10px] font-mono px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800/50">
+              v4.2 PRO
+            </span>
+          </div>
+          <p class="text-[11px] text-slate-400 font-mono">Wafer Yield Root Cause & Defect Pattern Analyser • S1 Mission Critical</p>
+        </div>
+      </div>
+
+      <!-- Live Fab Selectors & Exposure Ticker -->
+      <div class="flex flex-wrap items-center gap-3">
+        <!-- Node Switcher -->
+        <div class="flex items-center bg-slate-950 rounded-lg p-1 border border-slate-800 text-xs font-mono">
+          <label for="node-selector" class="sr-only">Select Node</label>
+          <select id="node-selector" class="bg-transparent text-slate-200 focus:outline-none px-2 py-1 cursor-pointer">
+            <option value="3nm-gaa">Node: 3nm GAAFET (Fab 12)</option>
+            <option value="5nm-euv">Node: 5nm EUV FinFET (Fab 16)</option>
+          </select>
+        </div>
+
+        <!-- Lot Selector -->
+        <div class="flex items-center bg-slate-950 rounded-lg p-1 border border-slate-800 text-xs font-mono">
+          <label for="lot-selector" class="sr-only">Select Lot</label>
+          <select id="lot-selector" class="bg-transparent text-cyan-300 font-bold focus:outline-none px-2 py-1 cursor-pointer">
+            <option value="LOT-W3-9042">LOT-W3-9042 (Edge-Ring S1 Excursion)</option>
+            <option value="LOT-W3-9043">LOT-W3-9043 (Robot Scratch Arc S2)</option>
+            <option value="LOT-W5-7718">LOT-W5-7718 (Center Thermal Donut)</option>
+            <option value="LOT-W3-9050">LOT-W3-9050 (Golden Baseline 96.8%)</option>
+          </select>
+        </div>
+
+        <!-- Financial Exposure Ticker -->
+        <div class="hidden lg:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-rose-950/40 border border-rose-500/40">
+          <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+          <div class="text-right font-mono">
+            <span class="text-[10px] text-rose-300 block uppercase leading-none">Monthly Exposure</span>
+            <span id="header-loss-ticker" class="text-xs font-bold text-rose-400">$12.4M USD Loss Risk</span>
+          </div>
+        </div>
+
+        <!-- Action Export Buttons -->
+        <div class="flex items-center gap-2">
+          <button id="btn-upload-data" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 text-xs font-mono font-medium transition-all flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+            </svg>
+            Import CSV
+          </button>
+          <input type="file" id="csv-file-input" accept=".csv,.txt,.klarf" class="hidden">
+
+          <button id="btn-export-report" class="px-3.5 py-1.5 rounded-lg bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold text-xs font-mono shadow-md shadow-cyan-950/50 transition-all flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
+            </svg>
+            Export 8D Report
+          </button>
+        </div>
+
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN CONTAINER -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 flex-1 w-full">
+
+    <!-- CRITICAL S1 ALERT BANNER -->
+    <div id="critical-banner" class="p-3 rounded-xl border flex flex-wrap items-center justify-between gap-3 mb-6 bg-rose-950/40 border-rose-500/60 text-rose-200 shadow-lg shadow-rose-950/40">
+      <div id="critical-banner-text" class="flex items-center gap-2">
+        <!-- Dynamic alert content injected by app.js -->
+      </div>
+      <div class="flex items-center gap-2">
+        <button id="btn-quick-quarantine" class="px-3 py-1.5 rounded-lg bg-rose-500 hover:bg-rose-600 text-slate-950 font-bold text-xs font-mono shadow transition-all">
+          ⚡ 1-CLICK QUARANTINE CHAMBER
+        </button>
+      </div>
+    </div>
+
+    <!-- KPI SUMMARY STRIP -->
+    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-6">
+      
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 shadow-sm relative overflow-hidden">
+        <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Lot Tested Yield</div>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span id="kpi-yield" class="text-2xl sm:text-3xl font-black font-mono text-rose-400">78.4%</span>
+          <span id="kpi-yield-delta" class="text-xs font-mono font-bold text-rose-400">-15.8% vs Target</span>
+        </div>
+        <span class="text-[10px] text-slate-500 font-mono block mt-1">Target Baseline: 94.2%</span>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 shadow-sm relative overflow-hidden">
+        <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Defect Density (D₀)</div>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span id="kpi-defect-density" class="text-2xl sm:text-3xl font-black font-mono text-slate-100">0.375</span>
+          <span class="text-xs font-mono text-slate-400">/ cm²</span>
+        </div>
+        <span class="text-[10px] text-slate-500 font-mono block mt-1">Threshold USL: &lt; 0.085/cm²</span>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 shadow-sm relative overflow-hidden">
+        <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Pre-Flight At-Risk Batches</div>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span id="kpi-at-risk-lots" class="text-2xl sm:text-3xl font-black font-mono text-amber-400">3 Queued</span>
+        </div>
+        <span class="text-[10px] text-slate-500 font-mono block mt-1">Early Warning Guard Active</span>
+      </div>
+
+      <div class="p-4 rounded-xl bg-slate-900/70 border border-slate-800 shadow-sm relative overflow-hidden">
+        <div class="text-[11px] font-mono text-slate-400 uppercase tracking-wider">Mean Time to Root Cause (MTTR)</div>
+        <div class="flex items-baseline gap-2 mt-1">
+          <span id="kpi-mttr" class="text-2xl sm:text-3xl font-black font-mono text-cyan-400">4.2 Hrs</span>
+          <span class="text-xs font-mono text-emerald-400 font-bold">-98.7%</span>
+        </div>
+        <span class="text-[10px] text-slate-500 font-mono block mt-1">Manual Analysis: ~14 Days</span>
+      </div>
+
+    </div>
+
+    <!-- MAIN INTERACTIVE TABS -->
+    <div class="border-b border-slate-800 flex items-center gap-1 sm:gap-2 mb-6 overflow-x-auto">
+      <button class="tab-btn active px-4 py-2.5 text-xs sm:text-sm font-semibold text-cyan-400 border-b-2 border-cyan-400 whitespace-nowrap flex items-center gap-2" data-tab="wafer-studio">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" stroke-width="2"/><path stroke-width="2" d="M12 3v18M3 12h18"/></svg>
+        1. Wafer Map & Pattern Studio
+      </button>
+
+      <button class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap flex items-center gap-2" data-tab="root-cause">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        2. Root Cause Ranking (RCA)
+      </button>
+
+      <button class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap flex items-center gap-2" data-tab="prescriptive-actions">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+        3. Prescriptive Actions & MES Dispatch
+      </button>
+
+      <button class="tab-btn px-4 py-2.5 text-xs sm:text-sm font-semibold text-slate-400 hover:text-slate-200 whitespace-nowrap flex items-center gap-2" data-tab="batch-risk-guard">
+        <svg class="w-4 h-4 text-amber-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg>
+        4. Pre-Flight Batch Risk Guard
+        <span class="px-1.5 py-0.2 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-mono border border-amber-500/40">3 At-Risk</span>
+      </button>
+    </div>
+
+    <!-- TAB 1: WAFER MAP & PATTERN STUDIO -->
+    <section id="tab-wafer-studio" class="tab-panel grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Left Column: Interactive 300mm Wafer Canvas -->
+      <div class="lg:col-span-7 flex flex-col">
+        <div class="wafer-canvas-wrapper p-4 flex-1 flex flex-col justify-between relative min-h-[540px]">
+          
+          <!-- Canvas Top Toolbar -->
+          <div class="flex flex-wrap items-center justify-between gap-3 z-10 bg-slate-950/70 p-2.5 rounded-xl border border-slate-800 backdrop-blur-sm">
+            <div class="flex items-center gap-2 text-xs font-mono">
+              <span class="text-slate-400 uppercase text-[10px]">Display Mode:</span>
+              <label for="canvas-mode-select" class="sr-only">Display Mode</label>
+              <select id="canvas-mode-select" class="bg-slate-900 border border-slate-700 text-cyan-300 rounded px-2 py-1 focus:outline-none">
+                <option value="bins">Bin Status (Pass / Fail)</option>
+                <option value="density">Defect Density Heatmap</option>
+                <option value="leakage">Leakage Current (I_leak)</option>
+                <option value="vth">Threshold Voltage (V_th)</option>
+              </select>
+            </div>
+
+            <!-- Viewport controls -->
+            <div class="flex items-center gap-1.5">
+              <button id="toggle-pattern-overlay" class="px-2 py-1 text-xs font-mono rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-cyan-400 transition-all" title="Toggle Pattern Signature Boundaries">
+                Overlay Contours
+              </button>
+              <button id="btn-zoom-in" class="p-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300" title="Zoom In">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/></svg>
+              </button>
+              <button id="btn-zoom-out" class="p-1 rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300" title="Zoom Out">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4"/></svg>
+              </button>
+              <button id="btn-zoom-reset" class="px-2 py-1 text-xs font-mono rounded bg-slate-900 hover:bg-slate-800 border border-slate-700 text-slate-300" title="Fit to Screen">
+                Reset
+              </button>
+            </div>
+          </div>
+
+          <!-- HTML5 Canvas Element -->
+          <div class="relative flex-1 flex items-center justify-center my-4 overflow-hidden">
+            <canvas id="wafer-canvas" class="cursor-crosshair max-w-full"></canvas>
+            
+            <!-- Floating Hover Tooltip -->
+            <div id="die-tooltip" class="die-tooltip opacity-0"></div>
+          </div>
+
+          <!-- Canvas Bottom Legend -->
+          <div class="flex flex-wrap items-center justify-between gap-3 text-[11px] font-mono text-slate-400 z-10 bg-slate-950/80 p-2 rounded-lg border border-slate-800">
+            <div class="flex items-center gap-3">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-emerald-500"></span> Pass (Bin 1)</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-500"></span> Marginal</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-rose-500"></span> Defect Fail</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm border border-dashed border-rose-500"></span> 3mm Edge Exclusion</span>
+            </div>
+            <span class="text-slate-500">SEMI 300mm Standard • Notch @ 90°</span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right Column: Die Inspector & Spatial Pattern Classifier -->
+      <div class="lg:col-span-5 space-y-6">
+
+        <!-- Selected Die Inspector Card -->
+        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-md">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div class="flex items-center gap-2">
+              <div class="w-2.5 h-2.5 rounded-full bg-cyan-400"></div>
+              <h3 class="text-sm font-bold text-slate-200">Interactive Die Inspector</h3>
+            </div>
+            <span class="text-[10px] font-mono text-slate-500">Click any die on wafer</span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mt-4 text-xs font-mono">
+            <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-[10px] text-slate-500 uppercase block">Grid / Coordinates</span>
+              <span id="inspector-coords" class="text-cyan-400 font-bold">[gx, gy] (X, Y mm)</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-[10px] text-slate-500 uppercase block">Test Bin Classification</span>
+              <span id="inspector-bin" class="text-slate-200 font-bold">Bin 7 - Edge Leakage</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-[10px] text-slate-500 uppercase block">Die Status</span>
+              <span id="inspector-status" class="text-rose-400 font-bold">DEFECTIVE</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-[10px] text-slate-500 uppercase block">Leakage Current (I_leak)</span>
+              <span id="inspector-leakage" class="text-slate-200 font-bold">18.4 nA</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-[10px] text-slate-500 uppercase block">Threshold Voltage (V_th)</span>
+              <span id="inspector-vth" class="text-slate-200 font-bold">0.192 V</span>
+            </div>
+
+            <div class="p-2.5 rounded-lg bg-slate-950/60 border border-slate-800">
+              <span class="text-[10px] text-slate-500 uppercase block">Defect Category</span>
+              <span id="inspector-defect-type" class="text-rose-400 font-bold truncate block">Edge Plasma Over-Etch</span>
+            </div>
+          </div>
+
+          <div class="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between">
+            <span class="text-[11px] text-slate-400">Microscopy Verification:</span>
+            <button id="btn-open-sem" class="px-3.5 py-1.5 rounded-lg bg-slate-800 hover:bg-cyan-500 hover:text-slate-950 border border-slate-700 text-cyan-400 text-xs font-mono font-bold transition-all flex items-center gap-1.5 shadow">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 100-6 3 3 0 000 6z"/></svg>
+              INSPECT SEM MICROGRAPH ➔
+            </button>
+          </div>
+        </div>
+
+        <!-- Spatial Pattern Recognition Engine Card -->
+        <div class="p-5 rounded-2xl bg-slate-900/80 border border-slate-800 shadow-md">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="text-xs font-mono font-bold px-2 py-0.5 rounded bg-cyan-950 text-cyan-300 border border-cyan-800">
+                  AI PATTERN CLASSIFIER
+                </span>
+                <span id="pattern-confidence" class="text-[11px] font-mono text-cyan-400 font-bold">96.8% CONFIDENCE</span>
+              </div>
+              <h3 id="pattern-title" class="text-base font-bold text-slate-100 mt-1">Edge-Ring Annular Excursion</h3>
+            </div>
+          </div>
+
+          <p id="pattern-desc" class="text-xs text-slate-300 mt-3 leading-relaxed">
+            Concentrated peripheral defect signature located beyond 82% radius, characteristic of RF bias non-uniformity and focus ring erosion.
+          </p>
+
+          <!-- Spatial Signatures Metrics -->
+          <div class="grid grid-cols-3 gap-2 mt-4 text-xs font-mono">
+            <div class="p-2 rounded bg-slate-950/60 border border-slate-800 text-center">
+              <span class="text-[10px] text-slate-500 uppercase block">Moran's I (Spatial)</span>
+              <span id="morans-i-val" class="text-cyan-400 font-bold">0.842</span>
+            </div>
+            <div class="p-2 rounded bg-slate-950/60 border border-slate-800 text-center">
+              <span class="text-[10px] text-slate-500 uppercase block">Outer Edge Mass</span>
+              <span id="edge-conc-val" class="text-rose-400 font-bold">88.4%</span>
+            </div>
+            <div class="p-2 rounded bg-slate-950/60 border border-slate-800 text-center">
+              <span class="text-[10px] text-slate-500 uppercase block">Center Mass</span>
+              <span id="center-conc-val" class="text-slate-300 font-bold">3.2%</span>
+            </div>
+          </div>
+
+          <!-- Ranked Candidate Patterns -->
+          <div class="mt-4">
+            <span class="text-[11px] font-mono text-slate-400 uppercase tracking-wider block mb-2">Classified Pattern Probabilities:</span>
+            <div id="pattern-rank-list" class="space-y-1.5">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 2: ROOT CAUSE ANALYSIS (RCA) ENGINE -->
+    <section id="tab-root-cause" class="tab-panel hidden grid grid-cols-1 lg:grid-cols-12 gap-6">
+      
+      <!-- Left Column: Probabilistic Ranking List -->
+      <div class="lg:col-span-5 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-base font-bold text-slate-100 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-cyan-400"></span>
+              Root Cause Probabilistic Ranking
+            </h3>
+            <p class="text-xs text-slate-400 font-mono mt-0.5">Bayesian Feature Attribution across 10,000+ sensor streams</p>
+          </div>
+        </div>
+
+        <div id="rca-rank-list" class="space-y-3">
+          <!-- Dynamically populated by rootCauseEngine.js -->
+        </div>
+      </div>
+
+      <!-- Right Column: Sensor Telemetry & Physical Mechanism -->
+      <div class="lg:col-span-7 space-y-6">
+        
+        <!-- Live Sensor Telemetry Chart Card -->
+        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md">
+          <div class="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800 pb-3 mb-4">
+            <div>
+              <span class="text-xs font-mono text-cyan-400 font-bold uppercase">Multi-Variate Sensor Telemetry</span>
+              <h4 id="selected-rc-title" class="text-base font-bold text-slate-100">Etch Chamber ETCH-04: RF Bias Power Uniformity Drift</h4>
+            </div>
+            <div class="text-right text-xs font-mono">
+              <span class="text-slate-400 block text-[10px]">Observed Drift</span>
+              <span id="selected-rc-drift" class="text-rose-400 font-bold">+28.4 W (+6.3% above 3σ)</span>
+            </div>
+          </div>
+
+          <!-- Chart.js Canvas -->
+          <div class="h-64 w-full relative">
+            <canvas id="telemetry-chart"></canvas>
+          </div>
+
+          <div class="grid grid-cols-3 gap-3 mt-4 pt-3 border-t border-slate-800/80 text-xs font-mono text-slate-400">
+            <div>
+              <span class="text-[10px] text-slate-500 uppercase block">Tool & Chamber</span>
+              <span id="selected-rc-tool" class="text-slate-200 font-bold">TEL-VIM-ETCH-04</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 uppercase block">Process Recipe Step</span>
+              <span id="selected-rc-step" class="text-slate-200 font-bold">Step 42: Gate Spacer Etch</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-500 uppercase block">Sensor Tag</span>
+              <span id="selected-rc-sensor" class="text-cyan-400 font-bold">ESC RF Bias Power</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Failure Physics Mechanism Card -->
+        <div class="p-5 rounded-2xl bg-slate-900/90 border border-slate-800 shadow-md">
+          <h4 class="text-xs font-bold font-mono text-cyan-400 uppercase tracking-wider flex items-center gap-2">
+            <svg class="w-4 h-4 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"/></svg>
+            Root Cause Physics & Semiconductor Failure Mechanism
+          </h4>
+          <p id="selected-rc-mechanism" class="text-xs text-slate-300 mt-2.5 leading-relaxed font-sans">
+            Electrostatic Chuck (ESC) peripheral edge ring ceramic wear caused high-frequency RF impedance drop at wafer radius r &gt; 125mm, intensifying plasma sheath energy and inducing severe nanosheet erosion.
+          </p>
+
+          <div class="mt-4 p-3 rounded-lg bg-slate-950/60 border border-slate-800/80 flex items-center justify-between text-xs font-mono">
+            <span class="text-slate-400">Recommended Action Ready:</span>
+            <button onclick="document.querySelector('[data-tab=prescriptive-actions]').click();" class="text-cyan-400 hover:text-cyan-300 font-bold underline">
+              View Prescriptive Action Playbook ➔
+            </button>
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+    <!-- TAB 3: PRESCRIPTIVE ACTIONS & MES DISPATCH -->
+    <section id="tab-prescriptive-actions" class="tab-panel hidden space-y-6">
+      
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div>
+          <h3 class="text-lg font-bold text-slate-100 flex items-center gap-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
+            Prescriptive Corrective Action Playbooks
+          </h3>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">Automated containment, parameter offsets, and SECS-GEM tool interlocks</p>
+        </div>
+        <div class="text-xs font-mono text-emerald-400 bg-emerald-950/40 px-3 py-1.5 rounded-lg border border-emerald-800/50">
+          Total Estimated Yield Recovery: +18.0% ($13.6M/Mo)
+        </div>
+      </div>
+
+      <div id="prescriptive-actions-list" class="space-y-4">
+        <!-- Populated dynamically by app.js -->
+      </div>
+
+    </section>
+
+    <!-- TAB 4: PRE-FLIGHT BATCH RISK GUARD -->
+    <section id="tab-batch-risk-guard" class="tab-panel hidden space-y-6">
+      
+      <div class="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 pb-4">
+        <div>
+          <div class="flex items-center gap-2">
+            <span class="px-2 py-0.5 text-xs font-mono font-bold rounded bg-amber-500/20 text-amber-300 border border-amber-500/30">
+              EARLY WARNING SYSTEM
+            </span>
+            <h3 class="text-lg font-bold text-slate-100">Pre-Flight Batch Risk Guard</h3>
+          </div>
+          <p class="text-xs text-slate-400 font-mono mt-0.5">
+            Predict upcoming batches at risk before cassette release into production line
+          </p>
+        </div>
+        <div class="text-xs font-mono text-slate-400 bg-slate-900 px-3 py-1.5 rounded-lg border border-slate-800">
+          MES Queue Polling: <span class="text-emerald-400 font-bold">Active (Real-Time)</span>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        
+        <!-- Left: Queued Batches List -->
+        <div class="lg:col-span-5 space-y-3">
+          <span class="text-xs font-mono text-slate-400 uppercase tracking-wider block">Batches Queued for Release:</span>
+          <div id="batch-queue-list" class="space-y-3">
+            <!-- Dynamically populated by predictiveBatchGuard.js -->
+          </div>
+        </div>
+
+        <!-- Right: What-If Simulator & Risk Detail -->
+        <div class="lg:col-span-7">
+          <div id="batch-simulator-container">
+            <!-- Dynamically populated by predictiveBatchGuard.js -->
+          </div>
+        </div>
+
+      </div>
+
+    </section>
+
+  </main>
+
+  <!-- SEM DEFECT REVIEW MODAL -->
+  <div id="sem-modal" class="modal-overlay fixed inset-0 z-50 flex items-center justify-center p-4 hidden">
+    <div class="bg-slate-900 border border-slate-700/80 rounded-2xl max-w-2xl w-full p-6 shadow-2xl relative">
+      <button id="sem-modal-close" class="absolute top-4 right-4 text-slate-400 hover:text-slate-100 p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700">
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+      </button>
+
+      <div id="sem-modal-content">
+        <!-- Content injected dynamically by app.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="border-t border-slate-800/60 bg-slate-950 py-4 text-center text-xs font-mono text-slate-500">
+    Bob Semiconductor Intelligence Platform • Built for Wafer Yield Root Cause & Defect Pattern Analysis Challenge
+  </footer>
+
+  <!-- Application Logic Modules -->
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
